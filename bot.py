@@ -1,4 +1,4 @@
-"""AI応募者デモ: Meet の面接官の声 → STT → Claude → Fish TTS → Anam アバター。
+"""AI応募者デモ: Meet の面接官の声 → STT → GLM → Gemini TTS → Anam アバター。
 
 入力音声: ブラウザ(WebRTCクライアント)のマイク = 仮想デバイスA(Meetの出力を流し込む)
 出力音声: ブラウザの再生先 = 仮想デバイスB(Meetのマイクにする)
@@ -24,9 +24,9 @@ from pipecat.processors.aggregators.llm_response_universal import (
 )
 from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
-from pipecat.services.anthropic.llm import AnthropicLLMService
 from pipecat.services.deepgram.stt import DeepgramSTTService
-from pipecat.services.fish.tts import FishAudioTTSService
+from pipecat.services.openai.llm import OpenAILLMService
+from pipecat.services.google.tts import GeminiTTSService
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 
 load_dotenv(override=True)
@@ -50,19 +50,27 @@ async def run_bot(transport: BaseTransport):
         api_key=os.environ["DEEPGRAM_API_KEY"],
         settings=DeepgramSTTService.Settings(model="nova-3", language="ja"),
     )
-    llm = AnthropicLLMService(
-        api_key=os.environ["ANTHROPIC_API_KEY"],
-        settings=AnthropicLLMService.Settings(
-            model=os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5"),
+    # GLM(Z.ai)はOpenAI互換APIなので、OpenAILLMServiceにbase_urlを指定して使う
+    llm = OpenAILLMService(
+        api_key=os.environ["ZAI_API_KEY"],
+        base_url=os.getenv("ZAI_BASE_URL", "https://api.z.ai/api/paas/v4"),
+        settings=OpenAILLMService.Settings(
+            model=os.getenv("ZAI_MODEL", "glm-5.3-flash"),
             system_instruction=PERSONA,
         ),
     )
-    tts = FishAudioTTSService(
-        api_key=os.environ["FISH_API_KEY"],
-        reference_id=os.environ["FISH_VOICE_ID"],
+    tts = GeminiTTSService(
+        api_key=os.environ["GEMINI_API_KEY"],
+        settings=GeminiTTSService.Settings(
+            model=os.getenv("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts"),
+            voice=os.getenv("GEMINI_TTS_VOICE", "Charon"),
+            prompt="落ち着いた自然な話し言葉の日本語で、面接を受ける応募者として丁寧に話す",
+        ),
     )
     anam = AnamVideoService(
         api_key=os.environ["ANAM_API_KEY"],
+        api_base_url="https://api.anam.ai",
+        api_version="v1",
         persona_config=PersonaConfig(
             avatar_id=os.environ["ANAM_AVATAR_ID"],
             avatar_model="cara-4",
