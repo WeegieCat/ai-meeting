@@ -5,7 +5,7 @@
 ```bash
 uv sync
 cp .env.example .env   # 各APIキー、FISH_VOICE_ID、ANAM_AVATAR_ID を設定
-uv run bot.py          # http://localhost:7860/client を開く
+uv run main.py         # http://localhost:7860/client を開く
 ```
 
 ## 音声・映像のルーティング
