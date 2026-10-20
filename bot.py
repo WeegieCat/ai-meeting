@@ -1,4 +1,4 @@
-"""AI応募者デモ: Meet の面接官の声 → STT → GLM → Gemini TTS → Anam アバター。
+"""AI応募者デモ: Meet の面接官の声 → STT → Groq → Gemini TTS → Anam アバター。
 
 入力音声: ブラウザ(WebRTCクライアント)のマイク = 仮想デバイスA(Meetの出力を流し込む)
 出力音声: ブラウザの再生先 = 仮想デバイスB(Meetのマイクにする)
@@ -25,7 +25,7 @@ from pipecat.processors.aggregators.llm_response_universal import (
 from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.deepgram.stt import DeepgramSTTService
-from pipecat.services.openai.llm import OpenAILLMService
+from pipecat.services.groq.llm import GroqLLMService
 from pipecat.services.google.tts import GeminiTTSService
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 
@@ -50,12 +50,10 @@ async def run_bot(transport: BaseTransport):
         api_key=os.environ["DEEPGRAM_API_KEY"],
         settings=DeepgramSTTService.Settings(model="nova-3", language="ja"),
     )
-    # GLM(Z.ai)はOpenAI互換APIなので、OpenAILLMServiceにbase_urlを指定して使う
-    llm = OpenAILLMService(
-        api_key=os.environ["ZAI_API_KEY"],
-        base_url=os.getenv("ZAI_BASE_URL", "https://api.z.ai/api/paas/v4"),
-        settings=OpenAILLMService.Settings(
-            model=os.getenv("ZAI_MODEL", "glm-5.3-flash"),
+    llm = GroqLLMService(
+        api_key=os.environ["GROQ_API_KEY"],
+        settings=GroqLLMService.Settings(
+            model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
             system_instruction=PERSONA,
         ),
     )
